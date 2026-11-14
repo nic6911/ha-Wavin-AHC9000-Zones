@@ -1,11 +1,13 @@
 {
   "domain": "wavin_ahc9000",
   "name": "Wavin AHC9000 Zones",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "codeowners": ["@nic6911"],
   "config_flow": true,
   "documentation": "https://github.com/nic6911/ha-Wavin-AHC9000-Zones",
+  "issue_tracker": "https://github.com/nic6911/ha-Wavin-AHC9000-Zones/issues",
   "iot_class": "local_push",
-  "dependencies": ["esphome"],
-  "requirements": []
+  "dependencies": ["esphome", "zeroconf"],
+  "requirements": [],
+  "zeroconf": ["_esphomelib._tcp.local."]
 }

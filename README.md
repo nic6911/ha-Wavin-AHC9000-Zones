@@ -7,8 +7,7 @@ It creates one Home Assistant device per heating zone, with a thermostat,
 temperature, floor temperature, battery, and child lock. AHC zone changes are
 picked up automatically.
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nic6911&repository=ha-Wavin-AHC9000-Zones&category=integration)
-[![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=wavin_ahc9000)
+[![Open in Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nic6911&repository=ha-Wavin-AHC9000-Zones&category=integration)
 
 <a href="https://github.com/nic6911/ha-Wavin-AHC9000-Zones"><img src="docs/integration-repo-qr.png" width="180" alt="QR code for this integration repository"></a>
 
@@ -37,23 +36,28 @@ climate entity per channel.
 
 ### 2. Install this integration
 
-1. Open HACS.
-2. Add this repository as a custom repository, category **Integration**:
+1. Go to **Settings → Marketplace**.
+2. Select **Add from link**.
+3. Enter this repository:
 
    `https://github.com/nic6911/ha-Wavin-AHC9000-Zones`
 
-3. Install **Wavin AHC9000 Zones**.
-4. Restart Home Assistant.
+4. If Marketplace asks for a type, choose **Integration**.
+5. Open **Wavin AHC9000 Zones** and select **Install**.
+6. If Home Assistant asks to restart, restart it.
 
-If the HACS button above works for you, it can do step 1–3.
+If the Marketplace link above works for you, it can do steps 1–5.
 
 ### 3. Add the device in Home Assistant
 
-1. Go to **Settings → Devices & services → Add integration**.
-2. Search for **Wavin AHC9000 Zones**.
-3. Enter the ESP32 IP address, for example `192.168.1.122`.
-4. Leave the Noise key empty unless you enabled ESPHome API encryption.
-5. Finish.
+Home Assistant normally finds the module automatically after it is online.
+
+1. Wait for a discovered **Wavin AHC9000** card, then select **Configure**.
+2. Confirm the device. You do not need to enter an IP address.
+3. If discovery does not appear, go to **Settings → Devices & services →
+   Add integration**, search for **Wavin AHC9000 Zones**, and enter the ESP32
+   address as a fallback. Leave the Noise key empty unless you enabled ESPHome
+   API encryption.
 
 The zones appear as devices named like `Zone (1+2)` or `Zone (16)`.
 
