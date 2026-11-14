@@ -21,7 +21,7 @@ You need two things: the ESP32 firmware and this integration.
 
 Use the ready-made ESPHome configuration:
 
-**[Wavin AHC9000 V4 quick start](https://github.com/nic6911/esphome_components/blob/main/components/wavinahc9000v4/README.md)**
+**[Wavin AHC9000 V4 quick start](https://github.com/heinekmadsen/esphome_components/blob/main/components/wavinahc9000v4/README.md)**
 
 The short version:
 
@@ -112,4 +112,4 @@ Copy `custom_components/wavin_ahc9000` into your Home Assistant
 For manual per-channel YAML, external room sensors, floor-probe climates, and
 other advanced options, see the firmware repository:
 
-**[wavinahc9000v4 documentation](https://github.com/nic6911/esphome_components/tree/main/components/wavinahc9000v4)**
+**[wavinahc9000v4 documentation](https://github.com/heinekmadsen/esphome_components/tree/main/components/wavinahc9000v4)**
