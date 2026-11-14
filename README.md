@@ -13,28 +13,6 @@ picked up automatically.
 
 ---
 
-## ESP32 Modbus Module Rev2
-
-If you use the **ESP32 Modbus Module Rev2** from uStepper, flash the ready-made
-AHC9000 automatic-zone configuration instead of building the YAML by hand:
-
-**[ahc9000_v4_auto.yaml](https://github.com/nic6911/ESP32_Modbus_Module/blob/main/esphome_example_code/rev2/ahc9000_v4_auto.yaml)**
-
-It is already configured for the Rev2 board: UART TX `GPIO21`, RX `GPIO20`,
-flow control `GPIO3`, and `38400` baud. It also enables automatic zone
-discovery and the services required by this integration.
-
-Flash the YAML with ESPHome, then install this integration as described
-[below](#2-install-this-integration). The underlying ESPHome component and all
-YAML options are documented here:
-
-**[Wavin AHC9000 V4 component setup](https://github.com/nic6911/esphome_components/blob/main/components/wavinahc9000v4/README.md)**
-
-For wiring and the module's RJ45/RS-485 connection, see the
-**[ESP32 Modbus Module README](https://github.com/nic6911/ESP32_Modbus_Module#connecting-the-module)**.
-
----
-
 ## Start here
 
 You need two things: the ESP32 firmware and this integration.
