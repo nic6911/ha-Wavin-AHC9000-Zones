@@ -19,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: WavinCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([WavinSyncSwitch(coordinator)])
+    async_add_entities([WavinModeSwitch(coordinator)])
     coordinator.register_platform(
         "switch",
         async_add_entities,
@@ -37,26 +37,22 @@ class WavinChildLockSwitch(WavinZoneEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self.coordinator.call_service(
-            "wavin_zone_set_child_lock",
+            f"{self.coordinator.service_prefix}_zone_set_child_lock",
             {"zone": self._zone_id, "enabled": True},
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.call_service(
-            "wavin_zone_set_child_lock",
+            f"{self.coordinator.service_prefix}_zone_set_child_lock",
             {"zone": self._zone_id, "enabled": False},
         )
 
-class WavinSyncSwitch(WavinParentEntity, SwitchEntity):
+
+class WavinModeSwitch(WavinParentEntity, SwitchEntity):
+    """Synchronise all room/zone setpoints to the first controllable room."""
+
     _attr_has_entity_name = False
     _entity_key = "sync"
-
-    async def async_added_to_hass(self) -> None:
-        await super().async_added_to_hass()
-        if self.entity_id:
-            er.async_get(self.hass).async_update_entity(
-                self.entity_id, has_entity_name=False, name=self.coordinator.sync_label
-            )
 
     @property
     def name(self) -> str:
@@ -67,15 +63,28 @@ class WavinSyncSwitch(WavinParentEntity, SwitchEntity):
         return self.coordinator.sync_enabled
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        await self.coordinator.call_service("wavin_zone_set_sync", {"enabled": True})
+        await self.coordinator.call_service(
+            f"{self.coordinator.service_prefix}_zone_set_sync", {"enabled": True}
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        await self.coordinator.call_service("wavin_zone_set_sync", {"enabled": False})
+        await self.coordinator.call_service(
+            f"{self.coordinator.service_prefix}_zone_set_sync", {"enabled": False}
+        )
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self._update_registry_name()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         super()._handle_coordinator_update()
-        if self.entity_id:
-            er.async_get(self.hass).async_update_entity(
-                self.entity_id, name=self.coordinator.sync_label
-            )
+        self._update_registry_name()
+
+    @callback
+    def _update_registry_name(self) -> None:
+        if not self.entity_id:
+            return
+        er.async_get(self.hass).async_update_entity(
+            self.entity_id, has_entity_name=False, name=self.name
+        )

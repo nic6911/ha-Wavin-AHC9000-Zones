@@ -8,7 +8,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -24,15 +28,21 @@ async def async_setup_entry(
 ) -> None:
     coordinator: WavinCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([WavinRssiSensor(coordinator)])
-    coordinator.register_platform(
-        "sensor",
-        async_add_entities,
-        lambda coordinator, zone: [
-            WavinZoneTemperatureSensor(coordinator, zone),
-            WavinZoneFloorSensor(coordinator, zone),
-            WavinZoneBatterySensor(coordinator, zone),
-        ],
-    )
+    coordinator.register_platform("sensor", async_add_entities, _zone_sensors)
+
+
+def _zone_sensors(coordinator: WavinCoordinator, zone: dict[str, Any]):
+    entities = [
+        WavinZoneTemperatureSensor(coordinator, zone),
+        WavinZoneFloorSensor(coordinator, zone),
+    ]
+    if "battery" in zone:
+        entities.append(WavinZoneBatterySensor(coordinator, zone))
+    if "humidity" in zone:
+        entities.append(WavinZoneHumiditySensor(coordinator, zone))
+    if "dewpoint" in zone:
+        entities.append(WavinZoneDewPointSensor(coordinator, zone))
+    return entities
 
 
 class WavinZoneTemperatureSensor(WavinZoneEntity, SensorEntity):
@@ -75,6 +85,34 @@ class WavinZoneBatterySensor(WavinZoneEntity, SensorEntity):
     def native_value(self) -> int | None:
         value = self.zone.get("battery")
         return int(value) if value is not None else None
+
+
+class WavinZoneHumiditySensor(WavinZoneEntity, SensorEntity):
+    _attr_name = "Humidity"
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
+    _entity_key = "humidity"
+
+    @property
+    def native_value(self) -> float | None:
+        value = self.zone.get("humidity")
+        return float(value) if value is not None else None
+
+
+class WavinZoneDewPointSensor(WavinZoneEntity, SensorEntity):
+    _attr_name = "Dew point"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
+    _entity_key = "dewpoint"
+
+    @property
+    def native_value(self) -> float | None:
+        value = self.zone.get("dewpoint")
+        return float(value) if value is not None else None
 
 
 class WavinRssiSensor(WavinParentEntity, SensorEntity):

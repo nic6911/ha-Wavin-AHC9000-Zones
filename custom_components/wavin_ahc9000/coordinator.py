@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import DeviceInfo, EVENT_DEVICE_REGIS
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_HOST, CONF_NOISE_PSK, CONF_PORT, DOMAIN, TOPOLOGY_NAME
+from .const import CONF_HOST, CONF_NOISE_PSK, CONF_PORT, DOMAIN, TOPOLOGY_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,9 @@ class WavinCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
         self.services: dict[str, UserService] = {}
         self.zones: dict[int, dict[str, Any]] = {}
         self.rssi: int | None = None
+        self.model = "ahc9000"
         self.sync_enabled = False
+        self.vacation = False
         self.master_zone: int | None = None
         self.master_name = ""
         self._platforms: dict[str, tuple[Callable, EntityFactory]] = {}
@@ -79,10 +81,7 @@ class WavinCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
         self.services = {service.name: service for service in services}
 
         for info in entities:
-            if isinstance(info, TextSensorInfo) and (
-                info.name == TOPOLOGY_NAME
-                or "topology" in (getattr(info, "object_id", "") or "").lower()
-            ):
+            if isinstance(info, TextSensorInfo) and (info.name or "") in TOPOLOGY_NAMES:
                 self.topology_key = info.key
                 break
         if self.topology_key is None:
@@ -96,7 +95,7 @@ class WavinCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             identifiers={(DOMAIN, self.mac)},
             name=self.device_name,
             manufacturer="MoreGeekN",
-            model="Wavin AHC9000",
+            model="Wavin Floor Heating",
             sw_version=self.sw_version,
         )
 
@@ -173,7 +172,15 @@ class WavinCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             if isinstance(zone, dict) and "id" in zone
         }
         self.rssi = parsed.get("rssi")
+        model = parsed.get("model")
+        if not model:
+            model = "sentio" if any(
+                isinstance(zone, dict) and ("humidity" in zone or "vacation" in parsed)
+                for zone in parsed.get("zones", [])
+            ) else "ahc9000"
+        self.model = model
         self.sync_enabled = bool(parsed.get("sync"))
+        self.vacation = bool(parsed.get("vacation"))
         self.master_zone = parsed.get("master_zone") or None
         self.master_name = parsed.get("master_name") or ""
         self.zones = zones
@@ -187,9 +194,9 @@ class WavinCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             device_registry.async_get_or_create(
                 config_entry_id=self.entry.entry_id,
                 identifiers={(DOMAIN, f"{self.mac}_zone_{zone['id']}")},
-                name=zone.get("name") or f"Zone {zone['id']}",
+                name=zone.get("name") or f"{'Room' if self.model == 'sentio' else 'Zone'} {zone['id']}",
                 manufacturer="MoreGeekN",
-                model="Wavin AHC9000 Zone",
+                model="Wavin Floor Heating Zone",
                 via_device_id=self.parent_device_id,
             )
 
@@ -211,21 +218,25 @@ class WavinCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             name = "zone " + name[5:]
         return f"Sync all zones to {name}" if name else "Sync all zones"
 
+    @property
+    def service_prefix(self) -> str:
+        return "sentio" if self.model == "sentio" else "wavin"
+
     def parent_device_info(self) -> DeviceInfo:
         return DeviceInfo(
             identifiers={(DOMAIN, self.mac)},
             name=self.device_name,
             manufacturer="MoreGeekN",
-            model="Wavin AHC9000",
+            model="Wavin Floor Heating",
             sw_version=self.sw_version,
         )
 
     def zone_device_info(self, zone: dict[str, Any]) -> DeviceInfo:
         return DeviceInfo(
             identifiers={(DOMAIN, f"{self.mac}_zone_{zone['id']}")},
-            name=zone.get("name") or f"Zone {zone['id']}",
+            name=zone.get("name") or f"{'Room' if self.model == 'sentio' else 'Zone'} {zone['id']}",
             manufacturer="MoreGeekN",
-            model="Wavin AHC9000 Zone",
+            model="Wavin Floor Heating Zone",
             via_device_id=self.parent_device_id,
         )
 

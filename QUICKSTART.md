@@ -3,7 +3,7 @@
 Your module is already flashed. You only need to connect it to Wi-Fi and add it
 to Home Assistant.
 
-<a href="https://github.com/nic6911/ha-Wavin-AHC9000-Zones"><img src="docs/integration-repo-qr.png" width="170" alt="QR code for the Wavin AHC9000 Zones integration"></a>
+<a href="https://github.com/nic6911/ha-wavin-floor-heating"><img src="docs/integration-repo-qr.png" width="170" alt="QR code for the Wavin AHC9000 Zones integration"></a>
 
 **You need**
 
@@ -51,7 +51,7 @@ The module restarts and joins your Wi-Fi. This can take a minute.
 3. Enter this repository:
 
    ```text
-   https://github.com/nic6911/ha-Wavin-AHC9000-Zones
+   https://github.com/nic6911/ha-wavin-floor-heating
    ```
 
 4. If Marketplace asks for a type, choose **Integration**.
@@ -107,5 +107,5 @@ zones independent again.
 Need help? Open an issue:
 
 ```text
-https://github.com/nic6911/ha-Wavin-AHC9000-Zones/issues
+https://github.com/nic6911/ha-wavin-floor-heating/issues
 ```

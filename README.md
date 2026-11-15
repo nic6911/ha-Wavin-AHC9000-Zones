@@ -1,15 +1,16 @@
-# Wavin AHC9000 Zones
+# Wavin Floor Heating
 
-Home Assistant integration for a Wavin AHC 9000 / Jablotron AC-116 heating
-controller running the ModBridge `wavinahc9000v4` ESPHome firmware.
+Home Assistant integration for Wavin floor-heating controllers running ESPHome:
 
-It creates one Home Assistant device per heating zone, with a thermostat,
-temperature, floor temperature, battery, and child lock. AHC zone changes are
-picked up automatically.
+- **Wavin AHC9000 / Jablotron AC-116** using `wavinahc9000v4`
+- **Wavin Sentio** using `sentiov2`
 
-[![Open in Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nic6911&repository=ha-Wavin-AHC9000-Zones&category=integration)
+The integration detects the controller model from the ESPHome topology data and
+creates one Home Assistant device per heating zone/room.
 
-<a href="https://github.com/nic6911/ha-Wavin-AHC9000-Zones"><img src="docs/integration-repo-qr.png" width="180" alt="QR code for this integration repository"></a>
+[![Open in Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nic6911&repository=ha-wavin-floor-heating&category=integration)
+
+<a href="https://github.com/nic6911/ha-wavin-floor-heating"><img src="docs/integration-repo-qr.png" width="180" alt="QR code for this integration repository"></a>
 
 ---
 
@@ -19,19 +20,20 @@ You need two things: the ESP32 firmware and this integration.
 
 ### 1. Flash the ESP32
 
-Use the ready-made ESPHome configuration:
+Use the ready-made ESPHome configuration for your controller:
 
-**[Wavin AHC9000 V4 quick start](https://github.com/heinekmadsen/esphome_components/blob/main/components/wavinahc9000v4/README.md)**
+- **[Wavin AHC9000 V4](https://github.com/heinekmadsen/esphome_components/blob/main/components/wavinahc9000v4/README.md)**
+- **[Wavin Sentio V2](https://github.com/heinekmadsen/esphome_components/blob/main/components/sentiov2/README.md)**
 
 The short version:
 
 1. Open ESPHome.
-2. Create a new device and paste `example_auto.yaml`.
+2. Create a new device and paste the matching example YAML.
 3. Set your Wi-Fi name/password and the correct UART pins for your board.
 4. Install it to the ESP32.
 5. Wait until the ESPHome device is online.
 
-The firmware automatically finds the AHC zones. You do not need to edit one
+The firmware automatically finds the zones or rooms. You do not need to edit one
 climate entity per channel.
 
 ### 2. Install this integration
@@ -40,26 +42,27 @@ climate entity per channel.
 2. Select **Add from link**.
 3. Enter this repository:
 
-   `https://github.com/nic6911/ha-Wavin-AHC9000-Zones`
+   `https://github.com/nic6911/ha-wavin-floor-heating`
 
 4. If Marketplace asks for a type, choose **Integration**.
-5. Open **Wavin AHC9000 Zones** and select **Install**.
+5. Open **Wavin Floor Heating** and select **Install**.
 6. If Home Assistant asks to restart, restart it.
-
-If the Marketplace link above works for you, it can do steps 1–5.
 
 ### 3. Add the device in Home Assistant
 
 Home Assistant normally finds the module automatically after it is online.
 
-1. Wait for a discovered **Wavin AHC9000** card, then select **Configure**.
+1. Wait for a discovered **Wavin AHC9000** or **Wavin Sentio** card, then select
+   **Configure**.
 2. Confirm the device. You do not need to enter an IP address.
 3. If discovery does not appear, go to **Settings → Devices & services →
-   Add integration**, search for **Wavin AHC9000 Zones**, and enter the ESP32
+   Add integration**, search for **Wavin Floor Heating**, and enter the ESP32
    address as a fallback. Leave the Noise key empty unless you enabled ESPHome
    API encryption.
 
-The zones appear as devices named like `Zone (1+2)` or `Zone (16)`.
+AHC zones appear as devices named like `Zone (1+2)` or `Zone (16)`. Sentio rooms
+appear as `Room 1`, `Room 2`, and so on, or with the room names exposed by the
+controller.
 
 That is it. No MQTT broker is needed.
 
@@ -67,21 +70,50 @@ That is it. No MQTT broker is needed.
 
 ## What you get
 
-- One Home Assistant device per zone
+Common to both controllers:
+
+- One Home Assistant device per zone/room
 - Climate entity with heat/off and setpoint control
-- Current temperature, floor temperature, and battery sensors
+- Current temperature and floor temperature
 - Child lock switch
 - ESP32 Wi-Fi RSSI sensor
-- Optional **Sync all zones to zone (x)** switch
 
-Zone setpoints follow the physical wall thermostat. The ESP32 only writes a
+Both controllers also provide:
+
+- Optional **Sync all rooms/zones to the first controllable room** switch
+
+AHC9000 additionally provides:
+
+- Battery percentage per zone
+
+Sentio additionally provides:
+
+- Humidity and dew-point sensors
+- Low-battery, warning and error binary sensors
+- Vacation mode via the `sentio_zone_set_vacation` service
+
+## Combined Sentio rooms
+
+When two Sentio channels share one thermostat, the controller can expose the
+writable thermostat in one room and the sensor readings in an adjacent room.
+The integration merges these into one Home Assistant device: setpoint and child
+lock come from the control room, while temperature, humidity and heating state
+come from the sensor room.
+
+## Controller behavior
+
+AHC zone setpoints follow the physical wall thermostat. The ESP32 only writes a
 setpoint when you change it from Home Assistant.
 
-## Sync all zones
+Sentio readings are filtered so invalid Modbus values (`0`, `327.67` and
+out-of-range values) do not create false temperature or humidity spikes in Home
+Assistant.
 
-The sync switch copies the first available zone's setpoint to every other zone
-and keeps them together while enabled. Turn it off to make zones independent
-again.
+## Sync all rooms/zones
+
+The sync switch copies the first controllable room/zone setpoint to every other
+room/zone and keeps them together while enabled. Turn it off to make them
+independent again. This works for both AHC9000 and Sentio.
 
 If you rename the master zone device in Home Assistant, the sync switch text
 follows that name.
@@ -90,8 +122,8 @@ follows that name.
 
 | Problem | Try |
 |---|---|
-| Cannot connect | Check the ESP32 IP address and that port `6053` is reachable |
-| No zones appear | Confirm the firmware uses `auto_zones: true` and has the `topology` text sensor |
+| Cannot connect | Check the ESP32 IP address and that TCP port `6053` is reachable |
+| No zones appear | Confirm the firmware exposes a topology text sensor |
 | Zones appear but controls fail | Update the firmware and integration together |
 | Device is offline | Check Wi-Fi, ESPHome logs, and the RSSI sensor |
 | Old zones remain | Reload the integration or restart Home Assistant |
@@ -99,8 +131,8 @@ follows that name.
 ## Compatibility
 
 - Home Assistant 2026.11 or newer
-- `wavinahc9000v4` firmware with topology JSON version `1`
-- ESPHome native API on TCP port `6053`
+- `wavinahc9000v4` or `sentiov2` firmware with topology JSON version `1`
+- ESPHome Native API on local TCP port `6053` (no port forwarding)
 
 ## Manual installation
 
@@ -110,6 +142,7 @@ Copy `custom_components/wavin_ahc9000` into your Home Assistant
 ## Advanced firmware options
 
 For manual per-channel YAML, external room sensors, floor-probe climates, and
-other advanced options, see the firmware repository:
+other advanced options, see the firmware repositories:
 
-**[wavinahc9000v4 documentation](https://github.com/heinekmadsen/esphome_components/tree/main/components/wavinahc9000v4)**
+- **[wavinahc9000v4 documentation](https://github.com/heinekmadsen/esphome_components/tree/main/components/wavinahc9000v4)**
+- **[sentiov2 documentation](https://github.com/heinekmadsen/esphome_components/tree/main/components/sentiov2)**

@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to Wavin AHC9000",
-        "description": "Enter the ESPHome device address. The firmware must run wavinahc9000v4 with a topology text sensor.",
+        "title": "Connect to Wavin floor heating",
+        "description": "Enter the ESPHome device address. The firmware must run wavinahc9000v4 or sentiov2 and expose a topology text sensor.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -12,7 +12,7 @@
       },
       "zeroconf_confirm": {
         "title": "Add {name}",
-        "description": "A Wavin AHC9000 ESPHome device was found on your network.",
+        "description": "A Wavin floor-heating ESPHome device was found on your network.",
         "data": {
           "noise_psk": "Noise encryption key"
         }
@@ -27,7 +27,7 @@
       "already_configured": "This device is already configured.",
       "cannot_connect": "Could not connect to the ESPHome device.",
       "mdns_missing_mac": "The discovered ESPHome device does not report a MAC address.",
-      "not_wavin": "This ESPHome device is not running the Wavin V4 firmware."
+      "not_wavin": "This ESPHome device is not running a supported Wavin firmware."
     }
   }
 }
