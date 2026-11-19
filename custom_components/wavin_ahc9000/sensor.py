@@ -32,10 +32,13 @@ async def async_setup_entry(
 
 
 def _zone_sensors(coordinator: WavinCoordinator, zone: dict[str, Any]):
-    entities = [
-        WavinZoneTemperatureSensor(coordinator, zone),
-        WavinZoneFloorSensor(coordinator, zone),
-    ]
+    entities = [WavinZoneTemperatureSensor(coordinator, zone)]
+    if "floor_sensor" in zone:
+        if zone.get("floor_sensor"):
+            entities.append(WavinZoneFloorSensor(coordinator, zone))
+    elif zone.get("floor") is not None:
+        # Older AHC firmware did not publish an explicit floor-sensor flag.
+        entities.append(WavinZoneFloorSensor(coordinator, zone))
     if "battery" in zone:
         entities.append(WavinZoneBatterySensor(coordinator, zone))
     if "humidity" in zone:

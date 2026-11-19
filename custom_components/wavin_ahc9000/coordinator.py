@@ -17,7 +17,7 @@ from aioesphomeapi.core import ConnectionNotEstablishedAPIError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo, EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.entity import Entity
@@ -185,8 +185,25 @@ class WavinCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
         self.master_name = parsed.get("master_name") or ""
         self.zones = zones
         self._ensure_zone_devices()
+        self._remove_stale_floor_entities()
         self.async_set_updated_data(zones)
         self._sync_all_platforms()
+
+    def _remove_stale_floor_entities(self) -> None:
+        """Remove old floor entities for zones without a floor probe."""
+        registry = er.async_get(self.hass)
+        for zone_id, zone in self.zones.items():
+            if "floor_sensor" not in zone or zone.get("floor_sensor"):
+                continue
+            for domain, key in (
+                ("sensor", "floor_temperature"),
+                ("climate", "floor_limits"),
+                ("switch", "floor_control"),
+            ):
+                unique_id = f"{self.mac}_zone_{zone_id}_{key}"
+                entity_id = registry.async_get_entity_id(domain, DOMAIN, unique_id)
+                if entity_id:
+                    registry.async_remove(entity_id)
 
     def _ensure_zone_devices(self) -> None:
         device_registry = dr.async_get(self.hass)

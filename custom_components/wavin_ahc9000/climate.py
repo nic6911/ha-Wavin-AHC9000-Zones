@@ -8,6 +8,10 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.climate.const import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -24,11 +28,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: WavinCoordinator = hass.data[DOMAIN][entry.entry_id]
-    coordinator.register_platform(
-        "climate",
-        async_add_entities,
-        lambda coordinator, zone: [WavinClimateEntity(coordinator, zone)],
-    )
+    coordinator.register_platform("climate", async_add_entities, _zone_climates)
+
+
+def _zone_climates(coordinator: WavinCoordinator, zone: dict[str, Any]):
+    entities = [WavinClimateEntity(coordinator, zone)]
+    if zone.get("floor_sensor"):
+        entities.append(WavinFloorLimitsClimate(coordinator, zone))
+    return entities
 
 
 class WavinClimateEntity(WavinZoneEntity, ClimateEntity):
@@ -79,3 +86,63 @@ class WavinClimateEntity(WavinZoneEntity, ClimateEntity):
             f"{self.coordinator.service_prefix}_zone_set_mode",
             {"zone": self._zone_id, "turn_off": hvac_mode == HVACMode.OFF},
         )
+
+
+class WavinFloorLimitsClimate(WavinZoneEntity, ClimateEntity):
+    """The two-point floor temperature range exposed by AHC IR thermostats."""
+
+    _attr_name = "Floor limits"
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = 0.5
+    _attr_min_temp = 5.0
+    _attr_max_temp = 35.0
+    _attr_hvac_modes = [HVACMode.HEAT_COOL]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    _entity_key = "floor_limits"
+
+    @property
+    def current_temperature(self) -> float | None:
+        value = self.zone.get("floor")
+        return float(value) if value is not None else None
+
+    @property
+    def target_temperature_low(self) -> float | None:
+        value = self.zone.get("floor_min")
+        return float(value) if value is not None else None
+
+    @property
+    def target_temperature_high(self) -> float | None:
+        value = self.zone.get("floor_max")
+        return float(value) if value is not None else None
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        return HVACMode.HEAT_COOL
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        current = self.current_temperature
+        low = self.target_temperature_low
+        if current is not None and low is not None and current < low:
+            return HVACAction.HEATING
+        return HVACAction.IDLE
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if low is not None:
+            await self.coordinator.call_service(
+                f"{self.coordinator.service_prefix}_zone_set_floor_min",
+                {"zone": self._zone_id, "temperature": float(low)},
+            )
+        if high is not None:
+            await self.coordinator.call_service(
+                f"{self.coordinator.service_prefix}_zone_set_floor_max",
+                {"zone": self._zone_id, "temperature": float(high)},
+            )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        # The floor-limits entity is always a heat/cool range; it has no mode
+        # command of its own. Floor sensing is controlled by the separate
+        # Floor control switch.
+        return

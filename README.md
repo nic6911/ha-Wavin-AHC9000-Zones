@@ -74,7 +74,8 @@ Common to both controllers:
 
 - One Home Assistant device per zone/room
 - Climate entity with heat/off and setpoint control
-- Current temperature and floor temperature
+- Current temperature
+- Floor temperature, floor limits and floor control only where an IR floor probe exists
 - Child lock switch
 - ESP32 Wi-Fi RSSI sensor
 
@@ -85,6 +86,10 @@ Both controllers also provide:
 AHC9000 additionally provides:
 
 - Battery percentage per zone
+
+For AHC9000 IR thermostats, the floor limits are exposed as a separate two-point
+`Floor limits` climate entity. A `Floor control` switch enables or disables
+application of the floor limits.
 
 Sentio additionally provides:
 

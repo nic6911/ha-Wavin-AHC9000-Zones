@@ -20,11 +20,7 @@ async def async_setup_entry(
 ) -> None:
     coordinator: WavinCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([WavinModeSwitch(coordinator)])
-    coordinator.register_platform(
-        "switch",
-        async_add_entities,
-        lambda coordinator, zone: [WavinChildLockSwitch(coordinator, zone)],
-    )
+    coordinator.register_platform("switch", async_add_entities, _zone_switches)
 
 
 class WavinChildLockSwitch(WavinZoneEntity, SwitchEntity):
@@ -44,6 +40,34 @@ class WavinChildLockSwitch(WavinZoneEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.call_service(
             f"{self.coordinator.service_prefix}_zone_set_child_lock",
+            {"zone": self._zone_id, "enabled": False},
+        )
+
+
+def _zone_switches(coordinator: WavinCoordinator, zone: dict[str, Any]):
+    entities = [WavinChildLockSwitch(coordinator, zone)]
+    if zone.get("floor_sensor"):
+        entities.append(WavinFloorControlSwitch(coordinator, zone))
+    return entities
+
+
+class WavinFloorControlSwitch(WavinZoneEntity, SwitchEntity):
+    _attr_name = "Floor control"
+    _entity_key = "floor_control"
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self.zone.get("floor_enabled"))
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.call_service(
+            "wavin_zone_set_floor_enabled",
+            {"zone": self._zone_id, "enabled": True},
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.call_service(
+            "wavin_zone_set_floor_enabled",
             {"zone": self._zone_id, "enabled": False},
         )
 
