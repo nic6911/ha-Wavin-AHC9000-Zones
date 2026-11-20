@@ -5,12 +5,15 @@ Home Assistant integration for Wavin floor-heating controllers running ESPHome:
 - **Wavin AHC9000 / Jablotron AC-116** using `wavinahc9000v4`
 - **Wavin Sentio** using `sentiov2`
 
-The integration detects the controller model from the ESPHome topology data and
-creates one Home Assistant device per heating zone/room.
+The firmware detects the controller model from the ESPHome topology data. This
+integration turns that topology into Home Assistant devices and entities
+automatically - no per-zone YAML, no register list, no MQTT.
 
 [![Open in Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nic6911&repository=ha-wavin-floor-heating&category=integration)
 
-<a href="https://github.com/nic6911/ha-wavin-floor-heating"><img src="docs/integration-repo-qr.png" width="180" alt="QR code for this integration repository"></a>
+> **Status:** 0.3.0. Matching firmware: AHC9000 `1.0.4-stable` and Sentio
+> `1.0.3-stable`. AHC9000 non-IR zones and Sentio rooms are validated on real
+> hardware; AHC9000 IR floor-probe controls need field validation.
 
 ---
 
@@ -22,8 +25,8 @@ You need two things: the ESP32 firmware and this integration.
 
 Use the ready-made ESPHome configuration for your controller:
 
-- **[Wavin AHC9000 V4](https://github.com/heinekmadsen/esphome_components/blob/main/components/wavinahc9000v4/README.md)**
-- **[Wavin Sentio V2](https://github.com/heinekmadsen/esphome_components/blob/main/components/sentiov2/README.md)**
+- **[Wavin AHC9000 V4](https://github.com/heinekmadsen/esphome_components/blob/1.0.4-stable/components/wavinahc9000v4/README.md)**
+- **[Wavin Sentio V2](https://github.com/heinekmadsen/esphome_components/blob/1.0.3-stable/components/sentiov2/README.md)**
 
 The short version:
 
@@ -42,7 +45,9 @@ climate entity per channel.
 2. Select **Add from link**.
 3. Enter this repository:
 
-   `https://github.com/nic6911/ha-wavin-floor-heating`
+   ```text
+   https://github.com/nic6911/ha-wavin-floor-heating
+   ```
 
 4. If Marketplace asks for a type, choose **Integration**.
 5. Open **Wavin Floor Heating** and select **Install**.
@@ -57,8 +62,8 @@ Home Assistant normally finds the module automatically after it is online.
 2. Confirm the device. You do not need to enter an IP address.
 3. If discovery does not appear, go to **Settings → Devices & services →
    Add integration**, search for **Wavin Floor Heating**, and enter the ESP32
-   address as a fallback. Leave the Noise key empty unless you enabled ESPHome
-   API encryption.
+   address as a fallback. Leave the API encryption key empty unless you enabled
+   ESPHome API encryption.
 
 AHC zones appear as devices named like `Zone (1+2)` or `Zone (16)`. Sentio rooms
 appear as `Room 1`, `Room 2`, and so on, or with the room names exposed by the
@@ -78,18 +83,14 @@ Common to both controllers:
 - Floor temperature, floor limits and floor control only where an IR floor probe exists
 - Child lock switch
 - ESP32 Wi-Fi RSSI sensor
-
-Both controllers also provide:
-
 - Optional **Sync all rooms/zones to the first controllable room** switch
 
 AHC9000 additionally provides:
 
 - Battery percentage per zone
-
-For AHC9000 IR thermostats, the floor limits are exposed as a separate two-point
-`Floor limits` climate entity. A `Floor control` switch enables or disables
-application of the floor limits.
+- A separate two-point `Floor limits` climate entity for IR thermostats
+- A `Floor control` switch that enables or disables application of the floor
+  limits
 
 Sentio additionally provides:
 
@@ -131,12 +132,15 @@ follows that name.
 | No zones appear | Confirm the firmware exposes a topology text sensor |
 | Zones appear but controls fail | Update the firmware and integration together |
 | Device is offline | Check Wi-Fi, ESPHome logs, and the RSSI sensor |
+| Some AHC zones show no floor controls | The thermostat has no floor probe, or the firmware did not detect it |
 | Old zones remain | Reload the integration or restart Home Assistant |
 
 ## Compatibility
 
 - Home Assistant 2026.11 or newer
-- `wavinahc9000v4` or `sentiov2` firmware with topology JSON version `1`
+- AHC9000 `wavinahc9000v4` `1.0.4-stable` or newer
+- Sentio `sentiov2` `1.0.3-stable` or newer
+- ESPHome topology JSON version `1`
 - ESPHome Native API on local TCP port `6053` (no port forwarding)
 
 ## Manual installation
@@ -149,5 +153,8 @@ Copy `custom_components/wavin_ahc9000` into your Home Assistant
 For manual per-channel YAML, external room sensors, floor-probe climates, and
 other advanced options, see the firmware repositories:
 
-- **[wavinahc9000v4 documentation](https://github.com/heinekmadsen/esphome_components/tree/main/components/wavinahc9000v4)**
-- **[sentiov2 documentation](https://github.com/heinekmadsen/esphome_components/tree/main/components/sentiov2)**
+- **[wavinahc9000v4 documentation](https://github.com/heinekmadsen/esphome_components/tree/1.0.4-stable/components/wavinahc9000v4)**
+- **[sentiov2 documentation](https://github.com/heinekmadsen/esphome_components/tree/1.0.3-stable/components/sentiov2)**
+
+Issue tracker:
+<https://github.com/nic6911/ha-wavin-floor-heating/issues>
