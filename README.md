@@ -11,9 +11,9 @@ automatically - no per-zone YAML, no register list, no MQTT.
 
 [![Open in Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nic6911&repository=ha-wavin-floor-heating&category=integration)
 
-> **Status:** 0.3.0. Matching firmware: AHC9000 `1.0.4-stable` and Sentio
-> `1.0.3-stable`. AHC9000 non-IR zones and Sentio rooms are validated on real
-> hardware; AHC9000 IR floor-probe controls need field validation.
+> **Status:** 0.3.0. The firmware examples track the latest `main` branch.
+> AHC9000 non-IR zones and Sentio rooms are validated on real hardware; AHC9000
+> IR floor-probe controls need field validation.
 
 ---
 
@@ -25,8 +25,8 @@ You need two things: the ESP32 firmware and this integration.
 
 Use the ready-made ESPHome configuration for your controller:
 
-- **[Wavin AHC9000 V4](https://github.com/heinekmadsen/esphome_components/blob/1.0.4-stable/components/wavinahc9000v4/README.md)**
-- **[Wavin Sentio V2](https://github.com/heinekmadsen/esphome_components/blob/1.0.3-stable/components/sentiov2/README.md)**
+- **[Wavin AHC9000 V4](https://github.com/heinekmadsen/esphome_components/blob/main/components/wavinahc9000v4/README.md)**
+- **[Wavin Sentio V2](https://github.com/heinekmadsen/esphome_components/blob/main/components/sentiov2/README.md)**
 
 The short version:
 
@@ -138,8 +138,8 @@ follows that name.
 ## Compatibility
 
 - Home Assistant 2026.11 or newer
-- AHC9000 `wavinahc9000v4` `1.0.4-stable` or newer
-- Sentio `sentiov2` `1.0.3-stable` or newer
+- AHC9000 `wavinahc9000v4` from the latest `main` branch
+- Sentio `sentiov2` from the latest `main` branch
 - ESPHome topology JSON version `1`
 - ESPHome Native API on local TCP port `6053` (no port forwarding)
 
@@ -153,8 +153,8 @@ Copy `custom_components/wavin_ahc9000` into your Home Assistant
 For manual per-channel YAML, external room sensors, floor-probe climates, and
 other advanced options, see the firmware repositories:
 
-- **[wavinahc9000v4 documentation](https://github.com/heinekmadsen/esphome_components/tree/1.0.4-stable/components/wavinahc9000v4)**
-- **[sentiov2 documentation](https://github.com/heinekmadsen/esphome_components/tree/1.0.3-stable/components/sentiov2)**
+- **[wavinahc9000v4 documentation](https://github.com/heinekmadsen/esphome_components/tree/main/components/wavinahc9000v4)**
+- **[sentiov2 documentation](https://github.com/heinekmadsen/esphome_components/tree/main/components/sentiov2)**
 
 Issue tracker:
 <https://github.com/nic6911/ha-wavin-floor-heating/issues>
